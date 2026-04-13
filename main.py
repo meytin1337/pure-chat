@@ -1,5 +1,4 @@
 import argparse
-import questionary
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
@@ -9,8 +8,7 @@ from rich.panel import Panel
 # Terminal-style input imports
 from prompt_toolkit.formatted_text import HTML
 
-from util import print_session_tail, select_session_interactive, setup_chat_session
-
+import util
 import db_manager
 
 load_dotenv()
@@ -26,13 +24,14 @@ def main():
 
     # Initial Session Setup
     session_id, session_name = db_manager.get_or_create_session(args.name)
-    ai, input_session = setup_chat_session(session_id)
+    ai, input_session = util.setup_chat_session(session_id)
 
     console.print(
         Panel(
             f"Active Session: [bold green]{session_name}[/bold green]\n"
             "[dim]• Use UP/DOWN arrows for question history\n"
             "• Type /conversations to switch sessions\n"
+            "• Type /model to switch active model\n"
             "• Type /exit to quit[/dim]",
             title="Gemini CLI",
             expand=False,
@@ -56,16 +55,20 @@ def main():
 
             if user_input.lower() == "/conversations":
                 # Call the function directly (no weird import needed)
-                new_id, new_name = select_session_interactive()
+                new_id, new_name = util.select_session_interactive()
                 session_id, session_name = new_id, new_name
-                ai, input_session = setup_chat_session(session_id)
+                ai, input_session = util.setup_chat_session(session_id)
                 console.print(
                     Panel(
                         f"Switched to: [bold green]{session_name}[/bold green]",
                         expand=False,
                     )
                 )
-                print_session_tail(session_id)
+                util.print_session_tail(session_id)
+                continue
+
+            if user_input.lower() == "/model":
+                util.select_model(session_id)
                 continue
 
             # --- PROCESS CHAT ---

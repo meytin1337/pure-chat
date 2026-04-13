@@ -4,9 +4,9 @@ from google.genai import types
 
 
 class GeminiAssistant:
-    def __init__(self, history=None):
+    def __init__(self, history=None, model_id=None):
         api_key = os.getenv("GEMINI_API_KEY")
-        model_id = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+        model_id = model_id or os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
         self.client = genai.Client(api_key=api_key)
         self.model_id = model_id
