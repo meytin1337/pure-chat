@@ -55,10 +55,10 @@ python main.py --name Project-Alpha
 
 ### ⌨️ In-Chat Commands
 
-/conversations : Opens the interactive session manager to switch or create chats.
-exit or quit : Safely saves and exits the application.
-UP / DOWN : Cycle through your entire history of user prompts.
-Ctrl+C : Interrupt the current input line.
+- `/conversations` : Opens the interactive session manager to switch or create chats.
+- `/exit` : Safely saves and exits the application.
+- `UP / DOWN` : Cycle through your entire history of user prompts.
+- `Ctrl+C` : Interrupt the current input line.
 
 ## 🏗️ Project Architecture
 
