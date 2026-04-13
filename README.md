@@ -10,13 +10,13 @@ Gemini CLI Vault was built to fill the gap for a "regular" chat app in the termi
 
 ## ✨ Key Features
 
-- Persistent Memory: Conversations are stored in a local SQLite database (gemini_vault.db), allowing you to resume any chat session at any time.
-- Live Streaming & Markdown: Responses stream in real-time with full Markdown rendering, including syntax-highlighted code blocks, tables, and lists.
-- Intelligent Context Window: Automatically manages token usage using a sliding window of the last 12 messages to maintain context without exceeding limits.
-- Interactive Session Switcher: Use the /conversations command to browse, search, and switch between previous chat sessions using an arrow-key menu.
-- Global Command History: Navigate your previous prompts across all sessions using the UP and DOWN arrows (powered by prompt_toolkit).
-- Google Search Integration: The assistant is equipped with the Google Search tool to provide up-to-date information on current events.
-- Dynamic Personalities: Load custom system instructions from a GEMINI.md file to change the AI's behavior and tone.
+- **Persistent Memory**: Conversations are stored in a local SQLite database (gemini_vault.db), allowing you to resume any chat session at any time.
+- **Live Streaming & Markdown**: Responses stream in real-time with full Markdown rendering, including syntax-highlighted code blocks, tables, and lists.
+- **Intelligent Context Window**: Automatically manages token usage using a sliding window of the last 12 messages to maintain context without exceeding limits.
+- **Interactive Session Switcher**: Use the /conversations command to browse, search, and switch between previous chat sessions using an arrow-key menu.
+- **Global Command History**: Navigate your previous prompts across all sessions using the UP and DOWN arrows (powered by prompt_toolkit).
+- **Google Search Integration**: The assistant is equipped with the Google Search tool to provide up-to-date information on current events.
+- **Dynamic Personalities**: Load custom system instructions from a GEMINI.md file to change the AI's behavior and tone.
 
 ## 🛠️ Installation (using uv)
 
@@ -70,16 +70,10 @@ Ctrl+C : Interrupt the current input line.
 
 ## 🏗️ Project Architecture
 
-- main.py: The entry point and TUI controller. Handles the input loop and rich live display.
-- db_manager.py: The data layer. Manages SQLite tables, message logging, and session retrieval.
-- ai_manager.py: The AI integration layer. Configures the google-genai client, tools, and system instructions.
-- gemini_vault.db: The local database generated on first run.
-
-## 📝 Technical Details
-
-- Random Session Naming: If no name is provided, the tool generates a friendly random ID (e.g., sparkling-nebula-742).
-- Sliding Window: To prevent API context overflow, the tool only fetches the most recent parts of the conversation for the AI's memory.
-- Rich Live Display: Uses Live blocks to update the terminal window dynamically as the AI streams chunks of text.
+- `main.py`: The entry point and TUI controller. Handles the input loop and rich live display.
+- `db_manager.py`: The data layer. Manages SQLite tables, message logging, and session retrieval.
+- `ai_manager.py`: The AI integration layer. Configures the google-genai client, tools, and system instructions.
+- `gemini_vault.db`: The local database generated on first run.
 
 ## 🤖 AI Disclosure
 
