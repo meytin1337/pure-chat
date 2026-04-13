@@ -127,8 +127,6 @@ def main():
                         expand=False,
                     )
                 )
-                console.print(session_id)
-                console.print(isinstance(session_id, str))
                 print_session_tail(session_id)
                 continue
 
