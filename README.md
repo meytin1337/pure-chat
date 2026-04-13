@@ -40,7 +40,7 @@ uv pip install google-genai python-dotenv rich prompt_toolkit questionary
 ```
 Create a .env file in the project root:
 GEMINI_API_KEY=your_google_api_key_here
-GEMINI_MODEL=gemini-2.0-flash-exp
+GEMINI_MODEL=gemini-3-flash-preview
 ```
 
 4. (Optional) Define System Instructions:
