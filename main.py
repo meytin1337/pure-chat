@@ -79,37 +79,28 @@ def main():
                     console.print(safe_snippet)
                     console.print()
                 
-                # Prompt for selection
-                while True:
-                    try:
-                        selection = input_session.prompt(
-                            HTML("<ansicyan><b>Jump to which? [1-{0}] (or press Enter to cancel): </b></ansicyan>".format(len(results)))
+                # Arrow-key selection (consistent with /conversations)
+                search_choices = [
+                    f"{r['session_name']} ({r['timestamp']} | {'You' if r['role'] == 'user' else 'Gemini'})"
+                    for r in results
+                ]
+                search_choices.append("Cancel")
+                
+                selected = util.pick_from_list("Jump to session:", search_choices)
+                
+                if selected is None or selected == "Cancel":
+                    console.print("[dim]Search cancelled.[/dim]\n")
+                else:
+                    selected_name = selected.rsplit(" (", 1)[0]
+                    session_id, session_name = db_manager.get_or_create_session(selected_name)
+                    ai, input_session = util.setup_chat_session(session_id)
+                    console.print(
+                        Panel(
+                            f"Switched to: [bold green]{session_name}[/bold green]",
+                            expand=False,
                         )
-                        
-                        if not selection.strip():
-                            console.print("[dim]Search cancelled.[/dim]\n")
-                            break
-                        
-                        selection_num = int(selection)
-                        if 1 <= selection_num <= len(results):
-                            selected = results[selection_num - 1]
-                            session_id, session_name = db_manager.get_or_create_session(selected["session_name"])
-                            ai, input_session = setup_chat_session(session_id)
-                            console.print(
-                                Panel(
-                                    f"Switched to: [bold green]{session_name}[/bold green]",
-                                    expand=False,
-                                )
-                            )
-                            print_session_tail(session_id)
-                            break
-                        else:
-                            console.print(f"[yellow]Please enter a number between 1 and {len(results)}[/yellow]")
-                    except ValueError:
-                        console.print("[yellow]Please enter a valid number[/yellow]")
-                    except KeyboardInterrupt:
-                        console.print("[dim]Search cancelled.[/dim]\n")
-                        break
+                    )
+                    util.print_session_tail(session_id)
                 
                 continue
 
