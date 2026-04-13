@@ -27,23 +27,15 @@ git clone https://github.com/yourusername/gemini-cli-vault.git
 cd gemini-cli-vault
 ```
 
-2. Create a virtual environment and install dependencies:
+2. Configure Environment Variables:
 
 ```
-uv venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-uv pip install google-genai python-dotenv rich prompt_toolkit questionary
-```
-
-3. Configure Environment Variables:
-
-```
-Create a .env file in the project root:
+# Create a .env file in the project root:
 GEMINI_API_KEY=your_google_api_key_here
 GEMINI_MODEL=gemini-3-flash-preview
 ```
 
-4. (Optional) Define System Instructions:
+3. (Optional) Define System Instructions:
    Create a GEMINI.md file to set the AI's System Prompt:
    You are an expert software architect. Provide concise, high-level advice and always include code snippets in Python or Rust.
 
