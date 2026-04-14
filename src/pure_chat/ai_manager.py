@@ -1,19 +1,26 @@
 import os
 from google import genai
 from google.genai import types
+import tomllib
+from pure_chat.fs import config_path
+from pure_chat.util import select_model
 
 
 class GeminiAssistant:
-    def __init__(self, history=None, model_id=None):
-        api_key = os.getenv("GEMINI_API_KEY")
-        model_id = model_id or os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+    def __init__(
+        self,
+        config,
+        model_id,
+        history=None,
+    ):
+        self.config = config
+        api_key = self.config.get("gemini_api_key")
+        self.model_id = model_id or self.config.get("default_model")
 
         self.client = genai.Client(api_key=api_key)
-        self.model_id = model_id
 
-        # 1. Load instructions from GEMINI.md
         instr = "You are a helpful assistant."
-        if os.path.exists("GEMINI.md"):
+        if config_path("GEMINI.md"):
             with open("GEMINI.md", "r") as f:
                 instr = f.read()
 

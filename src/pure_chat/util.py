@@ -1,11 +1,10 @@
 import questionary
-import os
 from pure_chat import db_manager
 from rich.markdown import Markdown
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
-from pure_chat.ai_manager import GeminiAssistant
 from google import genai
+from pure_chat.console import console
 
 QUESTIONARY_STYLE = questionary.Style(
     [
@@ -28,7 +27,6 @@ def pick_from_list(prompt, choices):
 def select_session_interactive():
     """Fetches sessions and lets user pick one with arrow keys."""
     sessions = db_manager.list_all_sessions()
-
     # We add an option to create a new one
     choices = [f"{s[0]} ({s[1]})" for s in sessions]
     choices.append("Create New Session")
@@ -43,7 +41,7 @@ def select_session_interactive():
     return db_manager.get_or_create_session(session_name)
 
 
-def print_session_tail(session_id, console):
+def print_session_tail(session_id):
     """Prints the last 50 messages to the console with Rich formatting."""
     tail = db_manager.get_last_n_messages(session_id)
     if not tail:
@@ -54,34 +52,27 @@ def print_session_tail(session_id, console):
         label = "You" if role == "user" else "Gemini"
         console.print(f"[bold {color}]{label}:[/bold {color}]")
         console.print(Markdown(content))
-        console.print("")  # Spacer
-    console.print("[dim]--- End of history ---\n[/dim]")
+        console.print("")  # Spacer console.print("[dim]--- End of history ---\n[/dim]")
 
 
-def setup_chat_session(session_id, model_id=None):
+def load_input_history():
     """Initializes history and the AI assistant."""
-    # 1. Load context history for Gemini (Sliding Window)
-    history = db_manager.get_chat_history(session_id, window_size=12)
-    ai = GeminiAssistant(history=history, model_id=model_id)
-
-    # 2. Setup UP-ARROW history for the terminal input
     past_user_prompts = db_manager.get_all_user_messages_global()
     terminal_history = InMemoryHistory()
     for prompt in past_user_prompts:
         terminal_history.append_string(prompt)
 
-    input_session = PromptSession(history=terminal_history)
+    input_history = PromptSession(history=terminal_history)
 
-    return ai, input_session
+    return input_history
 
 
-def select_model(session_id):
+def select_model(api_key):
     """
     Lists available Gemini models that support content generation
     and allows the user to select one via a CLI menu.
     """
     try:
-        api_key = os.getenv("GEMINI_API_KEY")
         client = genai.Client(api_key=api_key)
         available_models = [
             m
@@ -95,11 +86,21 @@ def select_model(session_id):
         ]
 
         selected_model_id = pick_from_list(
-            "Select the Gemini model you wish to use:", choices
+            "Select the Gemini model you wish to use \n(you can set a default model by setting default_model in the config.toml):",
+            choices,
         )
 
-        return setup_chat_session(session_id, selected_model_id)
+        return selected_model_id
 
     except Exception as e:
         print(f"Error fetching models: {e}")
         return None
+
+
+def ask_for_api_key():
+    api_key = questionary.password("Please enter your API key:").ask()
+
+    if not api_key:
+        raise Exception("API key is required")
+
+    return api_key

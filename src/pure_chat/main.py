@@ -1,18 +1,15 @@
 import argparse
-from dotenv import load_dotenv
-from rich.console import Console
 from rich.markdown import Markdown
 from rich.live import Live
 from rich.panel import Panel
 
-# Terminal-style input imports
 from prompt_toolkit.formatted_text import HTML
 
 from pure_chat import util
 from pure_chat import db_manager
-
-load_dotenv()
-console = Console()
+from pure_chat import fs
+from pure_chat.console import console
+from pure_chat.ai_manager import GeminiAssistant
 
 
 def main():
@@ -21,10 +18,20 @@ def main():
     args = parser.parse_args()
 
     db_manager.init_db()
+    config = fs.load_config()
+    api_key = config.get("gemini_api_key")
+    if not api_key:
+        api_key = util.ask_for_api_key()
+        fs.write_config("gemini_api_key", api_key)
+    model_id = config.get("default_model")
+    if not model_id:
+        model_id = util.select_model(api_key)
+
+    ai = GeminiAssistant(config, model_id)
 
     # Initial Session Setup
     session_id, session_name = db_manager.get_or_create_session(args.name)
-    ai, input_session = util.setup_chat_session(session_id)
+    input_history = util.load_input_history()
 
     console.print(
         Panel(
@@ -42,7 +49,7 @@ def main():
     while True:
         try:
             # Styled prompt using prompt_toolkit
-            user_input = input_session.prompt(
+            user_input = input_history.prompt(
                 HTML("<ansicyan><b>You > </b></ansicyan>")
             )
 
@@ -78,7 +85,6 @@ def main():
                         f"[bold white][{idx}][/bold white] [bold green]{result['session_name']}[/bold green]"
                     )
                     console.print(f"[dim]{result['timestamp']} | {role_label}[/dim]")
-                    # Escape Rich markup in snippet, then restore our highlight tags
                     safe_snippet = (
                         result["snippet"]
                         .replace("[bold green]", "\x01")
@@ -91,7 +97,6 @@ def main():
                     console.print(safe_snippet)
                     console.print()
 
-                # Arrow-key selection (consistent with /conversations)
                 search_choices = [
                     f"{r['session_name']} ({r['timestamp']} | {'You' if r['role'] == 'user' else 'Gemini'})"
                     for r in results
@@ -107,14 +112,17 @@ def main():
                     session_id, session_name = db_manager.get_or_create_session(
                         selected_name
                     )
-                    ai, input_session = util.setup_chat_session(session_id)
+                    chat_history = db_manager.get_chat_history(
+                        session_id, window_size=12
+                    )
+                    ai = GeminiAssistant(config, model_id, history=chat_history)
                     console.print(
                         Panel(
                             f"Switched to: [bold green]{session_name}[/bold green]",
                             expand=False,
                         )
                     )
-                    util.print_session_tail(session_id, console)
+                    util.print_session_tail(session_id)
 
                 continue
 
@@ -122,18 +130,23 @@ def main():
                 # Call the function directly (no weird import needed)
                 new_id, new_name = util.select_session_interactive()
                 session_id, session_name = new_id, new_name
-                ai, input_session = util.setup_chat_session(session_id)
+                chat_history = db_manager.get_chat_history(session_id, window_size=12)
+                ai = GeminiAssistant(config, model_id, history=chat_history)
                 console.print(
                     Panel(
                         f"Switched to: [bold green]{session_name}[/bold green]",
                         expand=False,
                     )
                 )
-                util.print_session_tail(session_id, console)
+                util.print_session_tail(session_id)
                 continue
 
             if user_input.lower() == "/model":
-                util.select_model(session_id)
+                util.select_model(api_key)
+                continue
+
+            if user_input.startswith("/"):
+                console.print(f"Unknown command {user_input.split(' ')[0]}")
                 continue
 
             # --- PROCESS CHAT ---
