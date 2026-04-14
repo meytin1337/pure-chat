@@ -8,6 +8,23 @@ from prompt_toolkit.history import InMemoryHistory
 from ai_manager import GeminiAssistant
 from google import genai
 
+QUESTIONARY_STYLE = questionary.Style(
+    [
+        ("pointer", "fg:#00ff00 bold"),
+        ("highlighted", "fg:#00ff00 bold"),
+        ("selected", "fg:#00ff00"),
+    ]
+)
+
+
+def pick_from_list(prompt, choices):
+    """Shared arrow-key selection using questionary."""
+    return questionary.select(
+        prompt,
+        choices=choices,
+        style=QUESTIONARY_STYLE,
+    ).ask()
+
 
 def select_session_interactive():
     """Fetches sessions and lets user pick one with arrow keys."""
@@ -17,17 +34,7 @@ def select_session_interactive():
     choices = [f"{s[0]} ({s[1]})" for s in sessions]
     choices.append("Create New Session")
 
-    selected = questionary.select(
-        "Choose a conversation:",
-        choices=choices,
-        style=questionary.Style(
-            [
-                ("pointer", "fg:#00ff00 bold"),
-                ("highlighted", "fg:#00ff00 bold"),
-                ("selected", "fg:#00ff00"),
-            ]
-        ),
-    ).ask()
+    selected = pick_from_list("Choose a conversation:", choices)
 
     if selected == "Create New Session" or selected is None:
         return db_manager.get_or_create_session()
@@ -88,18 +95,9 @@ def select_model(session_id):
             for m in available_models
         ]
 
-        selected_model_id = questionary.select(
-            "Select the Gemini model you wish to use:",
-            choices=choices,
-            style=questionary.Style(
-                [
-                    ("pointer", "fg:#00ff00 bold"),
-                    ("highlighted", "fg:#00ff00 bold"),
-                    ("selected", "fg:#00ff00"),
-                    ("separator", "fg:#666666"),
-                ]
-            ),
-        ).ask()
+        selected_model_id = pick_from_list(
+            "Select the Gemini model you wish to use:", choices
+        )
 
         return setup_chat_session(session_id, selected_model_id)
 

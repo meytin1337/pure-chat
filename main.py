@@ -30,6 +30,7 @@ def main():
         Panel(
             f"Active Session: [bold green]{session_name}[/bold green]\n"
             "[dim]• Use UP/DOWN arrows for question history\n"
+            "• Type /search <query> to search conversations\n"
             "• Type /conversations to switch sessions\n"
             "• Type /model to switch active model\n"
             "• Type /exit to quit[/dim]",
@@ -52,6 +53,56 @@ def main():
             if user_input.lower() in ["/exit"]:
                 console.print("[yellow]Goodbye![/yellow]")
                 break
+
+            if user_input.lower().startswith("/search "):
+                query = user_input[8:]  # Remove "/search "
+                if not query.strip():
+                    console.print("[yellow]Usage: /search <query> (use quotes for exact phrases)[/yellow]")
+                    continue
+                
+                results = db_manager.search_messages(query, limit=10)
+                
+                if not results:
+                    console.print("[yellow]No matches found.[/yellow]")
+                    continue
+                
+                console.print(f"\n[bold cyan]Found {len(results)} results for:[/bold cyan] {query}\n")
+                
+                for idx, result in enumerate(results, 1):
+                    role_label = "You" if result["role"] == "user" else "Gemini"
+                    console.print(f"[bold white][{idx}][/bold white] [bold green]{result['session_name']}[/bold green]")
+                    console.print(f"[dim]{result['timestamp']} | {role_label}[/dim]")
+                    # Escape Rich markup in snippet, then restore our highlight tags
+                    safe_snippet = result["snippet"].replace("[bold green]", "\x01").replace("[/bold green]", "\x02")
+                    safe_snippet = safe_snippet.replace("[", "\\[")
+                    safe_snippet = safe_snippet.replace("\x01", "[bold green]").replace("\x02", "[/bold green]")
+                    console.print(safe_snippet)
+                    console.print()
+                
+                # Arrow-key selection (consistent with /conversations)
+                search_choices = [
+                    f"{r['session_name']} ({r['timestamp']} | {'You' if r['role'] == 'user' else 'Gemini'})"
+                    for r in results
+                ]
+                search_choices.append("Cancel")
+                
+                selected = util.pick_from_list("Jump to session:", search_choices)
+                
+                if selected is None or selected == "Cancel":
+                    console.print("[dim]Search cancelled.[/dim]\n")
+                else:
+                    selected_name = selected.rsplit(" (", 1)[0]
+                    session_id, session_name = db_manager.get_or_create_session(selected_name)
+                    ai, input_session = util.setup_chat_session(session_id)
+                    console.print(
+                        Panel(
+                            f"Switched to: [bold green]{session_name}[/bold green]",
+                            expand=False,
+                        )
+                    )
+                    util.print_session_tail(session_id)
+                
+                continue
 
             if user_input.lower() == "/conversations":
                 # Call the function directly (no weird import needed)
