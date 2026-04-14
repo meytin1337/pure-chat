@@ -9,6 +9,7 @@ authors = [
 ]
 dependencies = [
     "google-genai>=1.72.0",
+    "platformdirs>=4.9.6",
     "prompt-toolkit>=3.0.52",
     "python-dotenv>=1.2.2",
     "questionary>=2.1.1",

@@ -1,12 +1,13 @@
 import sqlite3
 import random
 from datetime import datetime
-
-DB_NAME = "gemini_vault.db"
+from pure_chat.fs import database_path
 
 # Friendly word lists for random names
 ADJECTIVES = ["sparkling", "brave", "swift", "quiet", "neon", "mighty", "clever"]
 NOUNS = ["phoenix", "glitch", "nebula", "cipher", "wizard", "orbit", "atlas"]
+
+DB_NAME = database_path()
 
 
 def init_db():
