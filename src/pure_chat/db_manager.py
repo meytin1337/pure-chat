@@ -20,14 +20,12 @@ def init_db():
                           (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, 
                            role TEXT, content TEXT, timestamp DATETIME,
                            FOREIGN KEY(session_id) REFERENCES sessions(id))""")
-        
+
         # Create FTS5 virtual table for full-text search
-        cursor.execute(
-            """CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
+        cursor.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
                 content, role, session_id, content_rowid=rowid
-            )"""
-        )
-        
+            )""")
+
         # Create triggers to keep FTS in sync
         cursor.execute(
             """CREATE TRIGGER IF NOT EXISTS messages_ai AFTER INSERT ON messages BEGIN
@@ -46,15 +44,13 @@ def init_db():
                 WHERE rowid = new.id;
             END"""
         )
-        
+
         # Backfill: Index existing messages that aren't in FTS yet
-        cursor.execute(
-            """INSERT INTO messages_fts(rowid, content, role, session_id)
+        cursor.execute("""INSERT INTO messages_fts(rowid, content, role, session_id)
                SELECT m.id, m.content, m.role, m.session_id
                FROM messages m
                LEFT JOIN messages_fts fts ON m.id = fts.rowid
-               WHERE fts.rowid IS NULL"""
-        )
+               WHERE fts.rowid IS NULL""")
 
 
 def generate_random_name():
@@ -156,7 +152,7 @@ def _escape_fts_token(token: str) -> str:
     # Remove characters that have special meaning in FTS5 MATCH expressions
     special = '" * ( ) : ^'
     for ch in special:
-        token = token.replace(ch, '')
+        token = token.replace(ch, "")
     return token
 
 
@@ -168,15 +164,15 @@ def parse_search_query(query: str) -> str:
     """
     if not query or not query.strip():
         return ""
-    
+
     query = query.strip()
-    
+
     # Check if query is wrapped in quotes (exact phrase)
     if query.startswith('"') and query.endswith('"') and len(query) > 2:
         # Remove quotes for phrase search (FTS5 handles phrases natively)
         inner = query[1:-1]
         return f'"{inner}"'
-    
+
     # Fuzzy search: add * at end of each word for prefix matching
     tokens = query.split()
     escaped = [_escape_fts_token(t) for t in tokens]
@@ -188,8 +184,8 @@ def parse_search_query(query: str) -> str:
 
 
 # Invisible sentinel markers for FTS5 snippets (won't conflict with Rich markup)
-_MARK_START = '\x01'
-_MARK_END = '\x02'
+_MARK_START = "\x01"
+_MARK_END = "\x02"
 
 
 def search_messages(query: str, limit: int = 10):
@@ -200,12 +196,12 @@ def search_messages(query: str, limit: int = 10):
     """
     if not query or not query.strip():
         return []
-    
+
     fts_query = parse_search_query(query)
-    
+
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
-        
+
         # Search FTS table and join with messages for metadata
         # Use invisible sentinel markers to avoid Rich markup conflicts
         cursor.execute(
@@ -223,9 +219,9 @@ def search_messages(query: str, limit: int = 10):
             ORDER BY rank
             LIMIT ?
             """,
-            (_MARK_START, _MARK_END, fts_query, limit)
+            (_MARK_START, _MARK_END, fts_query, limit),
         )
-        
+
         # Deduplicate by session_id: keep the best (first) match per session
         seen_sessions = set()
         results = []
@@ -234,16 +230,22 @@ def search_messages(query: str, limit: int = 10):
             if sid in seen_sessions:
                 continue
             seen_sessions.add(sid)
-            
+
             # Replace sentinel markers with Rich markup tags
-            snippet = row[2].replace(_MARK_START, '[bold green]').replace(_MARK_END, '[/bold green]')
-            
-            results.append({
-                "session_id": sid,
-                "session_name": row[1],
-                "snippet": snippet,
-                "timestamp": row[3],
-                "role": row[4]
-            })
-        
+            snippet = (
+                row[2]
+                .replace(_MARK_START, "[bold green]")
+                .replace(_MARK_END, "[/bold green]")
+            )
+
+            results.append(
+                {
+                    "session_id": sid,
+                    "session_name": row[1],
+                    "snippet": snippet,
+                    "timestamp": row[3],
+                    "role": row[4],
+                }
+            )
+
         return results

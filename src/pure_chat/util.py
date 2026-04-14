@@ -1,11 +1,10 @@
 import questionary
 import os
-import db_manager
-from main import console
+from pure_chat import db_manager
 from rich.markdown import Markdown
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
-from ai_manager import GeminiAssistant
+from pure_chat.ai_manager import GeminiAssistant
 from google import genai
 
 QUESTIONARY_STYLE = questionary.Style(
@@ -44,7 +43,7 @@ def select_session_interactive():
     return db_manager.get_or_create_session(session_name)
 
 
-def print_session_tail(session_id):
+def print_session_tail(session_id, console):
     """Prints the last 50 messages to the console with Rich formatting."""
     tail = db_manager.get_last_n_messages(session_id)
     if not tail:

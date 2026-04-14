@@ -1,6 +1,6 @@
 # PureChat
 
-A high-performance Terminal User Interface (TUI) designed to replicate the experience of gemini.google.com directly in your terminal. This tool provides persistent conversation memory, real-time streaming, and interactive session management.
+A high-performance Terminal User Interface (TUI) designed to replicate the experience of browser based llm chat applications directly in your terminal. This tool provides persistent conversation memory, real-time streaming, and interactive session management.
 
 ## 💡 Motivation
 
