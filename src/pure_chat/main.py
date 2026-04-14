@@ -33,18 +33,7 @@ def main():
     session_id, session_name = db_manager.get_or_create_session(args.name)
     input_history = util.load_input_history()
 
-    console.print(
-        Panel(
-            f"Active Session: [bold green]{session_name}[/bold green]\n"
-            "[dim]• Use UP/DOWN arrows for question history\n"
-            "• Type /search <query> to search conversations\n"
-            "• Type /conversations to switch sessions\n"
-            "• Type /model to switch active model\n"
-            "• Type /exit to quit[/dim]",
-            title="Gemini CLI",
-            expand=False,
-        )
-    )
+    util.print_help(session_name)
 
     while True:
         try:
@@ -59,6 +48,10 @@ def main():
             # --- COMMANDS ---
             if user_input.lower() in ["/exit"]:
                 console.print("[yellow]Goodbye![/yellow]")
+                break
+
+            if user_input.lower() in ["/help"]:
+                util.print_help(session_name)
                 break
 
             if user_input.lower().startswith("/search "):

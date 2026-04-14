@@ -5,6 +5,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 from google import genai
 from pure_chat.console import console
+from rich.panel import Panel
 
 QUESTIONARY_STYLE = questionary.Style(
     [
@@ -104,3 +105,19 @@ def ask_for_api_key():
         raise Exception("API key is required")
 
     return api_key
+
+
+def print_help(session_name):
+    console.print(
+        Panel(
+            f"Active Session: [bold green]{session_name}[/bold green]\n"
+            "[dim]• Use UP/DOWN arrows for question history\n"
+            "• Type /search <query> to search conversations\n"
+            "• Type /conversations to switch sessions\n"
+            "• Type /model to switch active model\n"
+            "• Type /exit to quit\n"
+            "• Type /help to print this message[/dim]",
+            title="PureChat",
+            expand=False,
+        )
+    )
