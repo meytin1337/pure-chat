@@ -112,8 +112,9 @@ def print_help(session_name):
         Panel(
             f"Active Session: [bold green]{session_name}[/bold green]\n"
             "[dim]• Use UP/DOWN arrows for question history\n"
+            "• Type /new to start a new conversation\n"
             "• Type /search <query> to search conversations\n"
-            "• Type /conversations to switch sessions\n"
+            "• Type /conversations to switch to an old conversation\n"
             "• Type /model to switch active model\n"
             "• Type /exit to quit\n"
             "• Type /help to print this message[/dim]",

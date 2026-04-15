@@ -46,13 +46,17 @@ def main():
                 continue
 
             # --- COMMANDS ---
-            if user_input.lower() in ["/exit"]:
+            if user_input.lower() == "/exit":
                 console.print("[yellow]Goodbye![/yellow]")
                 break
 
-            if user_input.lower() in ["/help"]:
+            if user_input.lower() == "/help":
                 util.print_help(session_name)
-                break
+                continue
+
+            if user_input.lower() == "/new":
+                session_id, session_name = db_manager.get_or_create_session()
+                continue
 
             if user_input.lower().startswith("/search "):
                 query = user_input[8:]  # Remove "/search "
