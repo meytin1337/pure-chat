@@ -28,8 +28,7 @@ class GeminiAssistant:
         self.config = types.GenerateContentConfig(
             tools=[search_tool],
             system_instruction=instr,
-            max_output_tokens=1000,  # Measure to reduce output token cost
-            temperature=0.7,
+            temperature=0.2,
         )
 
         self.chat = self.client.chats.create(
