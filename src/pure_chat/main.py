@@ -39,7 +39,9 @@ def main():
         try:
             # Styled prompt using prompt_toolkit
             user_input = input_history.prompt(
-                HTML("<ansicyan><b>You > </b></ansicyan>")
+                HTML(
+                    f"<b><lightgreen>{session_name}</lightgreen><ansicyan> - You > </ansicyan></b>"
+                )
             )
 
             if not user_input.strip():
