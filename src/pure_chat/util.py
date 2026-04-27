@@ -3,6 +3,7 @@ from pure_chat import db_manager
 from rich.markdown import Markdown
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.completion import WordCompleter
 from google import genai
 from pure_chat.console import console
 from rich.panel import Panel
@@ -56,6 +57,9 @@ def print_session_tail(session_id):
         console.print("")  # Spacer console.print("[dim]--- End of history ---\n[/dim]")
 
 
+COMMANDS = ["/exit", "/help", "/new", "/rename", "/delete", "/search", "/conversations", "/model"]
+
+
 def load_input_history():
     """Initializes history and the AI assistant."""
     past_user_prompts = db_manager.get_all_user_messages_global()
@@ -63,7 +67,8 @@ def load_input_history():
     for prompt in past_user_prompts:
         terminal_history.append_string(prompt)
 
-    input_history = PromptSession(history=terminal_history)
+    completer = WordCompleter(COMMANDS, sentence=True)
+    input_history = PromptSession(history=terminal_history, completer=completer)
 
     return input_history
 
@@ -113,6 +118,8 @@ def print_help(session_name):
             f"Active Session: [bold green]{session_name}[/bold green]\n"
             "[dim]• Use UP/DOWN arrows for question history\n"
             "• Type /new to start a new conversation\n"
+            "• Type /rename <name> to rename the current session\n"
+            "• Type /delete to delete a session\n"
             "• Type /search <query> to search conversations\n"
             "• Type /conversations to switch to an old conversation\n"
             "• Type /model to switch active model\n"
