@@ -1,5 +1,4 @@
 import argparse
-import questionary
 from rich.markdown import Markdown
 from rich.live import Live
 from rich.panel import Panel
@@ -61,46 +60,6 @@ def main():
             if user_input.lower() == "/new":
                 session_id, session_name = db_manager.get_or_create_session()
                 input_history = util.load_input_history()
-                continue
-
-            if user_input.lower().startswith("/rename "):
-                new_name = user_input[8:].strip()
-                if not new_name:
-                    console.print("[yellow]Usage: /rename <new-name>[/yellow]")
-                    continue
-                result = db_manager.rename_session(session_id, new_name)
-                if result:
-                    session_name = result
-                    console.print(f"[green]Session renamed to:[/green] [bold]{session_name}[/bold]")
-                else:
-                    console.print(f"[red]Could not rename. Name '{new_name}' may already be taken.[/red]")
-                continue
-
-            if user_input.lower() == "/delete":
-                sessions = db_manager.list_all_sessions()
-                choices = [f"{s[0]} ({s[1]})" for s in sessions]
-                choices.append("Cancel")
-                selected = util.pick_from_list("Delete which session?", choices)
-                if selected is None or selected == "Cancel":
-                    console.print("[dim]Delete cancelled.[/dim]")
-                    continue
-                selected_name = selected.rsplit(" (", 1)[0]
-                confirm = questionary.confirm(
-                    f"Permanently delete '{selected_name}' and all its messages?",
-                    default=False,
-                ).ask()
-                if not confirm:
-                    console.print("[dim]Delete cancelled.[/dim]")
-                    continue
-                target_id, _ = db_manager.get_or_create_session(selected_name)
-                db_manager.delete_session(target_id)
-                console.print(f"[green]Deleted session:[/green] [bold]{selected_name}[/bold]")
-                if target_id == session_id:
-                    session_id, session_name = db_manager.get_or_create_session()
-                    chat_history = db_manager.get_chat_history(session_id, window_size=12)
-                    ai = GeminiAssistant(config, model_id, history=chat_history)
-                    input_history = util.load_input_history()
-                    console.print(f"Switched to new session: [bold green]{session_name}[/bold green]")
                 continue
 
             if user_input.lower().startswith("/search "):
@@ -169,18 +128,18 @@ def main():
                 continue
 
             if user_input.lower() == "/conversations":
-                # Call the function directly (no weird import needed)
-                new_id, new_name = util.select_session_interactive()
-                session_id, session_name = new_id, new_name
-                chat_history = db_manager.get_chat_history(session_id, window_size=12)
-                ai = GeminiAssistant(config, model_id, history=chat_history)
-                console.print(
-                    Panel(
-                        f"Switched to: [bold green]{session_name}[/bold green]",
-                        expand=False,
+                result = util.select_session_interactive(current_session_id=session_id)
+                if result is not None:
+                    session_id, session_name = result
+                    chat_history = db_manager.get_chat_history(session_id, window_size=12)
+                    ai = GeminiAssistant(config, model_id, history=chat_history)
+                    console.print(
+                        Panel(
+                            f"Switched to: [bold green]{session_name}[/bold green]",
+                            expand=False,
+                        )
                     )
-                )
-                util.print_session_tail(session_id)
+                    util.print_session_tail(session_id)
                 continue
 
             if user_input.lower() == "/model":
