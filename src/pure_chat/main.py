@@ -23,6 +23,7 @@ def main():
     if not api_key:
         api_key = util.ask_for_api_key()
         fs.write_config("gemini_api_key", api_key)
+        config["gemini_api_key"] = api_key
     model_id = config.get("default_model")
     if not model_id:
         model_id = util.select_model(api_key)
@@ -58,6 +59,7 @@ def main():
 
             if user_input.lower() == "/new":
                 session_id, session_name = db_manager.get_or_create_session()
+                input_history = util.load_input_history()
                 continue
 
             if user_input.lower().startswith("/search "):
@@ -126,18 +128,18 @@ def main():
                 continue
 
             if user_input.lower() == "/conversations":
-                # Call the function directly (no weird import needed)
-                new_id, new_name = util.select_session_interactive()
-                session_id, session_name = new_id, new_name
-                chat_history = db_manager.get_chat_history(session_id, window_size=12)
-                ai = GeminiAssistant(config, model_id, history=chat_history)
-                console.print(
-                    Panel(
-                        f"Switched to: [bold green]{session_name}[/bold green]",
-                        expand=False,
+                result = util.select_session_interactive(current_session_id=session_id)
+                if result is not None:
+                    session_id, session_name = result
+                    chat_history = db_manager.get_chat_history(session_id, window_size=12)
+                    ai = GeminiAssistant(config, model_id, history=chat_history)
+                    console.print(
+                        Panel(
+                            f"Switched to: [bold green]{session_name}[/bold green]",
+                            expand=False,
+                        )
                     )
-                )
-                util.print_session_tail(session_id)
+                    util.print_session_tail(session_id)
                 continue
 
             if user_input.lower() == "/model":

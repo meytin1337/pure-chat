@@ -148,6 +148,27 @@ def get_all_user_messages_global():
         return [row[0] for row in cursor.fetchall()]
 
 
+def rename_session(session_id, new_name):
+    """Rename a session. Returns the new name, or None if the name is already taken."""
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE sessions SET name = ? WHERE id = ?", (new_name, session_id))
+            if cursor.rowcount == 0:
+                return None
+            return new_name
+        except sqlite3.IntegrityError:
+            return None
+
+
+def delete_session(session_id):
+    """Delete a session and all its messages."""
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
+        cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+
+
 def _escape_fts_token(token: str) -> str:
     """Escape FTS5 special characters in a single token."""
     # Remove characters that have special meaning in FTS5 MATCH expressions
