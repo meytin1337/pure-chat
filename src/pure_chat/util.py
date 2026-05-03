@@ -52,7 +52,7 @@ def select_session_interactive(current_session_id=None):
                 ("class:question", "Choose a conversation "),
                 (
                     "class:instruction",
-                    "(↑↓ navigate, Enter=select, D=delete, R=rename, Esc=cancel)",
+                    "(↑↓/Ctrl+p/Ctrl+n navigate, Enter=select, D=delete, R=rename, Esc=cancel)",
                 ),
             ]
 
@@ -89,11 +89,13 @@ def select_session_interactive(current_session_id=None):
         action = [None]
 
         @bindings.add(Keys.Up, eager=True)
+        @bindings.add(Keys.ControlP, eager=True)
         def move_up(event):
             if selected[0] > 0:
                 selected[0] -= 1
 
         @bindings.add(Keys.Down, eager=True)
+        @bindings.add(Keys.ControlN, eager=True)
         def move_down(event):
             if selected[0] < total - 1:
                 selected[0] += 1

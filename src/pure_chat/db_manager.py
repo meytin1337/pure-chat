@@ -22,6 +22,12 @@ def init_db():
                            role TEXT, content TEXT, timestamp DATETIME,
                            FOREIGN KEY(session_id) REFERENCES sessions(id))""")
 
+        # Migration: add 'summary' column if missing (pre-0.3 databases)
+        try:
+            conn.execute("ALTER TABLE sessions ADD COLUMN summary TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
         # Create FTS5 virtual table for full-text search
         cursor.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
                 content, role, session_id, content_rowid=rowid
