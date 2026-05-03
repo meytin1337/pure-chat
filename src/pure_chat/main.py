@@ -8,6 +8,7 @@ from prompt_toolkit.formatted_text import HTML
 from pure_chat import util
 from pure_chat import db_manager
 from pure_chat import fs
+from pure_chat import ai_manager
 from pure_chat.console import console
 from pure_chat.ai_manager import GeminiAssistant
 
@@ -17,6 +18,7 @@ def main():
     parser.add_argument("--name", type=str, help="Start/Continue a specific session")
     args = parser.parse_args()
 
+    chat_history = None
     db_manager.init_db()
     config = fs.load_config()
     api_key = config.get("gemini_api_key")
@@ -50,7 +52,19 @@ def main():
 
             # --- COMMANDS ---
             if user_input.lower() == "/exit":
-                console.print("[yellow]Goodbye![/yellow]")
+                should_summarize_chat = config.get("summarize_chat")
+                summary = None
+                chat_history = db_manager.get_chat_history(session_id)
+                if (
+                    should_summarize_chat is not False
+                    and chat_history
+                    and chat_history.__len__() > 0
+                ):
+                    console.print(
+                        "[yellow]Summarizing chat history (you can disable this feature by setting summarize_chat = false)[/yellow]"
+                    )
+                    summary = ai.summarize_session(chat_history)
+                util.end_chat(session_id, summary)
                 break
 
             if user_input.lower() == "/help":
@@ -59,6 +73,7 @@ def main():
 
             if user_input.lower() == "/new":
                 session_id, session_name = db_manager.get_or_create_session()
+                ai = GeminiAssistant(config, model_id)
                 input_history = util.load_input_history()
                 continue
 
@@ -131,7 +146,9 @@ def main():
                 result = util.select_session_interactive(current_session_id=session_id)
                 if result is not None:
                     session_id, session_name = result
-                    chat_history = db_manager.get_chat_history(session_id, window_size=12)
+                    chat_history = db_manager.get_chat_history(
+                        session_id, window_size=12
+                    )
                     ai = GeminiAssistant(config, model_id, history=chat_history)
                     console.print(
                         Panel(
@@ -173,7 +190,19 @@ def main():
             # Standard terminal behavior: Ctrl+C clears the current line
             continue
         except EOFError:
-            # Ctrl+D exits
+            should_summarize_chat = config.get("summarize_chat")
+            summary = None
+            chat_history = db_manager.get_chat_history(session_id)
+            if (
+                should_summarize_chat is not False
+                and chat_history
+                and chat_history.__len__() > 0
+            ):
+                console.print(
+                    "[yellow]Summarizing chat history (you can disable this feature by setting summarize_chat = false)[/yellow]"
+                )
+                summary = ai.summarize_session(chat_history)
+            util.end_chat(session_id, summary)
             break
 
 

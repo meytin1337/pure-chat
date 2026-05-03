@@ -15,7 +15,7 @@ def init_db():
         cursor = conn.cursor()
         cursor.execute(
             """CREATE TABLE IF NOT EXISTS sessions 
-                          (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, created_at DATETIME)"""
+                          (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, created_at DATETIME, summary TEXT)"""
         )
         cursor.execute("""CREATE TABLE IF NOT EXISTS messages 
                           (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, 
@@ -104,7 +104,7 @@ def save_message(session_id, role, content):
 def list_all_sessions():
     with sqlite3.connect(DB_NAME) as conn:
         return conn.execute(
-            "SELECT name, created_at FROM sessions ORDER BY created_at DESC"
+            "SELECT name, summary, created_at FROM sessions ORDER BY created_at DESC"
         ).fetchall()
 
 
@@ -123,7 +123,7 @@ def get_session_user_messages(session_id):
 # Add/Update these functions in db_manager.py
 
 
-def get_last_n_messages(session_id):
+def get_entire_chat_history(session_id):
     """Fetches the last N messages of a specific session for display."""
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
@@ -153,7 +153,9 @@ def rename_session(session_id, new_name):
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("UPDATE sessions SET name = ? WHERE id = ?", (new_name, session_id))
+            cursor.execute(
+                "UPDATE sessions SET name = ? WHERE id = ?", (new_name, session_id)
+            )
             if cursor.rowcount == 0:
                 return None
             return new_name
@@ -271,3 +273,11 @@ def search_messages(query: str, limit: int = 10):
             )
 
         return results
+
+
+def update_session_summary(session_id, summary):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE sessions SET summary = ? WHERE id = ?", (summary, session_id)
+        )

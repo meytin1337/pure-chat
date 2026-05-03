@@ -37,3 +37,11 @@ class GeminiAssistant:
 
     def send_stream(self, text):
         return self.chat.send_message_stream(text)
+
+    def summarize_session(self, messages):
+        response = self.client.models.generate_content(
+            model="gemini-flash-latest",
+            contents=f"Summarize the following conversation, maximum is 7 words: {messages}",
+        )
+        if response.text:
+            return response.text.strip()

@@ -50,17 +50,22 @@ def select_session_interactive(current_session_id=None):
             return [
                 ("class:qmark", "? "),
                 ("class:question", "Choose a conversation "),
-                ("class:instruction", "(↑↓ navigate, Enter=select, D=delete, R=rename, Esc=cancel)"),
+                (
+                    "class:instruction",
+                    "(↑↓ navigate, Enter=select, D=delete, R=rename, Esc=cancel)",
+                ),
             ]
 
         def get_body():
             tokens = []
-            for i, (name, date) in enumerate(sessions):
+            for i, (name, summary, date) in enumerate(sessions):
                 short_date = date[:16] if date else ""
                 if i == selected[0]:
-                    tokens.append(("class:selected", f"  » {name} ({short_date})\n"))
+                    tokens.append(
+                        ("class:selected", f"  » {name} - {summary} ({short_date})\n")
+                    )
                 else:
-                    tokens.append(("", f"    {name} ({short_date})\n"))
+                    tokens.append(("", f"    {name} - {summary} ({short_date})\n"))
             idx = len(sessions)
             if idx == selected[0]:
                 tokens.append(("class:selected", "  » Create New Session\n"))
@@ -71,10 +76,14 @@ def select_session_interactive(current_session_id=None):
         header_ctrl = FormattedTextControl(get_header)
         body_ctrl = FormattedTextControl(get_body)
 
-        layout = Layout(HSplit([
-            Window(content=header_ctrl, height=1),
-            Window(content=body_ctrl),
-        ]))
+        layout = Layout(
+            HSplit(
+                [
+                    Window(content=header_ctrl, height=1),
+                    Window(content=body_ctrl),
+                ]
+            )
+        )
 
         bindings = KeyBindings()
         action = [None]
@@ -126,12 +135,14 @@ def select_session_interactive(current_session_id=None):
         def _(event):
             """Ignore unbound keys."""
 
-        style = PtStyle.from_dict({
-            "qmark": "#00ff00 bold",
-            "question": "bold",
-            "instruction": "#888888",
-            "selected": "#00ff00 bold",
-        })
+        style = PtStyle.from_dict(
+            {
+                "qmark": "#00ff00 bold",
+                "question": "bold",
+                "instruction": "#888888",
+                "selected": "#00ff00 bold",
+            }
+        )
 
         app = Application(
             layout=layout, key_bindings=bindings, style=style, full_screen=False
@@ -161,7 +172,9 @@ def select_session_interactive(current_session_id=None):
             if confirm:
                 db_manager.delete_session(target_id)
                 deleted_ids.add(target_id)
-                console.print(f"[green]Deleted session:[/green] [bold]{session_name}[/bold]")
+                console.print(
+                    f"[green]Deleted session:[/green] [bold]{session_name}[/bold]"
+                )
             selected_idx = selected[0]
             continue
 
@@ -185,8 +198,8 @@ def select_session_interactive(current_session_id=None):
 
 
 def print_session_tail(session_id):
-    """Prints the last 50 messages to the console with Rich formatting."""
-    tail = db_manager.get_last_n_messages(session_id)
+    """Prints the messages from the selected session to the console with Rich formatting."""
+    tail = db_manager.get_entire_chat_history(session_id)
     if not tail:
         return
 
@@ -268,3 +281,9 @@ def print_help(session_name):
             expand=False,
         )
     )
+
+
+def end_chat(session_id, summary):
+    if summary:
+        db_manager.update_session_summary(session_id, summary)
+    console.print("[yellow]Goodbye![/yellow]")
